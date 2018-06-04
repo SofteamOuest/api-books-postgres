@@ -7,9 +7,6 @@ podTemplate(label: 'books-postgres-pod', nodeSelector: 'medium', containers: [
         // le slave jenkins
         containerTemplate(name: 'jnlp', image: 'jenkinsci/jnlp-slave:alpine'),
 
-        // un conteneur pour le build maven
-        containerTemplate(name: 'gradle', image: 'elkouhen/gradle-docker', privileged: true, ttyEnabled: true, command: 'cat'),
-
         // un conteneur pour construire les images docker
         containerTemplate(name: 'docker', image: 'docker', command: 'cat', ttyEnabled: true),
 
@@ -41,19 +38,10 @@ podTemplate(label: 'books-postgres-pod', nodeSelector: 'medium', containers: [
             checkout scm;
         }
 
-        container('gradle') {
-
-            stage('build sources') {
-                sh 'gradle clean build'
-            }
-        }
-
         container('docker') {
 
             stage('build docker image') {
 
-
-                sh 'ls -la build/libs'
 
                 sh "docker build -t registry.k8.wildwidewest.xyz/repository/docker-repository/pocs/books-postgres:$now ."
 
