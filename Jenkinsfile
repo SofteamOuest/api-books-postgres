@@ -2,7 +2,7 @@
 import java.text.SimpleDateFormat
 
 // pod utilisé pour la compilation du projet
-podTemplate(label: 'meltingpoc-api-gateway-pod', nodeSelector: 'medium', containers: [
+podTemplate(label: 'books-postgres-pod', nodeSelector: 'medium', containers: [
 
         // le slave jenkins
         containerTemplate(name: 'jnlp', image: 'jenkinsci/jnlp-slave:alpine'),
@@ -20,7 +20,7 @@ podTemplate(label: 'meltingpoc-api-gateway-pod', nodeSelector: 'medium', contain
         volumes: [hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock')]
 ) {
 
-    node('meltingpoc-api-gateway-pod') {
+    node('books-postgres-pod') {
 
         def branch = env.JOB_NAME.replaceFirst('.+/', '');
 
@@ -53,9 +53,7 @@ podTemplate(label: 'meltingpoc-api-gateway-pod', nodeSelector: 'medium', contain
             stage('build docker image') {
 
 
-                sh 'ls -la build/libs'
-
-                sh "docker build -t registry.k8.wildwidewest.xyz/repository/docker-repository/pocs/meltingpoc-api-gateway:$now ."
+                sh "docker build -t registry.k8.wildwidewest.xyz/repository/docker-repository/pocs/books-postgres:$now ."
 
                 sh 'mkdir /etc/docker'
 
@@ -66,7 +64,7 @@ podTemplate(label: 'meltingpoc-api-gateway-pod', nodeSelector: 'medium', contain
                                  string(credentialsId: 'registry_url', variable: 'REGISTRY_URL')]) {
 
                     sh "docker login -u admin -p ${NEXUS_PWD} ${REGISTRY_URL}"
-                    sh "docker push ${REGISTRY_URL}/repository/docker-repository/pocs/meltingpoc-api-gateway:$now"
+                    sh "docker push ${REGISTRY_URL}/repository/docker-repository/pocs/books-postgres:$now"
                 }
 
 
@@ -77,7 +75,7 @@ podTemplate(label: 'meltingpoc-api-gateway-pod', nodeSelector: 'medium', contain
 
             stage('deploy') {
 
-                build job: "api-gateway-run/master",
+                build job: "books-postgres-run/master",
                         wait: false,
                         parameters: [[$class: 'StringParameterValue', name: 'image', value: "$now"]]
 
