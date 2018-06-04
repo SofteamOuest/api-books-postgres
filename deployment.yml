@@ -1,0 +1,41 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: books-postgres
+spec:
+  replicas: 1
+  template:
+    metadata:
+     labels:
+        app: books-postgres
+    spec:
+      containers:
+      - name: books-postgres
+        image: registry.k8.wildwidewest.xyz/repository/docker-repository/pocs/books-postgres:${IMAGE}
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: postgres-fs
+          mountPath: /var/lib/registry
+      imagePullSecrets:
+      - name: regsecret
+      volumes:
+      - name: postgres-fs
+        flexVolume:
+          driver: ceph.rook.io/rook
+          fsType: ceph
+          options:
+            fsName: myfs # name of the filesystem specified in the filesystem CRD.
+            clusterNamespace: rook-ceph
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: books-postgres
+spec:
+  selector:
+    app: books-postgres
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
